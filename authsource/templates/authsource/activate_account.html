@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Activate Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<div class="container">
+    <h1>Welcome to Our Platform!</h1>
+    <p>Dear {{ user.first_name }} {{ user.last_name }},</p>
+      <p>Thank you for registering. To activate your account, please click on the button below:</p>
+      <p>
+        <a href="http://{{ domain }}{% url 'authentication_app:account_activate' uidb64=uid token=token %}" class="button">Activate Your Account</a>
+    </p>
+        <p>This link will expire in 7 days.</p
+    <p>If you did not register for an account, you can safely ignore this email.</p>
+      <p>
+        Sincerely,<br>The {{ site_name }} Team
+    </p>  
+</div>
+</html>

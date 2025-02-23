@@ -4,11 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-six = "*"
-django = "*"
 pillow = "*"
-pymupdf = "*"
-ggshield = "*"
+requests = "*"
 
 [dev-packages]
 

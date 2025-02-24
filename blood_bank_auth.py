@@ -106,6 +106,10 @@ class BloodBankAuth:
             ttk.Label(self.main_frame, text="Hospital Name:").pack()
             extra_field_entry = ttk.Entry(self.main_frame)
             extra_field_entry.pack(pady=5)
+        elif role == "donor":
+            ttk.Label(self.main_frame, text="Donor ID:").pack()
+            extra_field_entry = ttk.Entry(self.main_frame)
+            extra_field_entry.pack(pady=5)
         
         # Register button
         ttk.Button(
@@ -159,6 +163,10 @@ class BloodBankAuth:
             messagebox.showerror("Error", "Please enter hospital name")
             return
         
+        if role == "donor" and not extra_field:
+            messagebox.showerror("Error", "Please enter donor ID")
+            return
+        
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
         
@@ -172,7 +180,7 @@ class BloodBankAuth:
                 self.hash_password(password),
                 role,
                 extra_field if role == "hospital" else None,
-                None  # donor_id will be updated after donor registration
+                extra_field if role == "donor" else None
             ))
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
@@ -203,7 +211,7 @@ class BloodBankAuth:
         
         ttk.Label(self.main_frame, text=f"Welcome, {self.current_user}", 
                  font=('Helvetica', 16, 'bold')).pack(pady=10)
-        
+
         # Donation history
         history_frame = ttk.LabelFrame(self.main_frame, text="Your Donation History")
         history_frame.pack(padx=20, pady=10, fill='both', expand=True)
@@ -224,20 +232,30 @@ class BloodBankAuth:
         ttk.Button(self.main_frame, text="Logout", 
                   command=self.logout).pack(pady=10)
 
-    def load_donor_history(self, donor_id):
+    def load_donor_history(self, donor_id, email=None, username=None):
         try:
-            response = requests.get(f'{self.API_BASE_URL}/donor-history/{donor_id}/')
-            if response.status_code == 200:
-                history = response.json()
-                for donation in history:
-                    self.history_tree.insert('', 'end', values=(
-                        donation['date'],
-                        donation['blood_type'],
-                        donation['quantity'],
-                        donation['center']
-                    ))
-        except requests.RequestException:
-            messagebox.showerror("Error", "Failed to fetch donation history")
+            conn = sqlite3.connect('bloodbank_users.db')
+            cursor = conn.cursor()
+            query = '''
+                SELECT last_donation, blood_type, quantity_ml, hospital
+                FROM donors
+                WHERE donor_id = ?
+            '''
+            params = [donor_id]
+            if email:
+                query += ' AND email = ?'
+                params.append(email)
+            if username:
+                query += ' AND username = ?'
+                params.append(username)
+            cursor.execute(query, params)
+            history = cursor.fetchall()
+            conn.close()
+            
+            for donation in history:
+                self.history_tree.insert('', 'end', values=donation)
+        except sqlite3.Error as e:
+            messagebox.showerror("Error", f"Failed to fetch donation history: {str(e)}")
 
     def logout(self):
         self.current_user = None

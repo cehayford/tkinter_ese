@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import json
 import sqlite3
 
+
 class BloodBankApp:
     def __init__(self, root, parent, username, role, hospital_name=None):
         self.root = root
@@ -95,6 +96,7 @@ class BloodBankApp:
             ("Phone:", "phone", ttk.Entry),
             ("Email:", "email", ttk.Entry),
             ("Location:", "location", ttk.Entry),
+            ("Quantity (ml):", "quantity_ml", ttk.Entry)
         ]
         
         self.donor_entries = {}
@@ -123,7 +125,7 @@ class BloodBankApp:
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
         
         # Create treeview
-        columns = ('Name', 'Blood Type', 'Phone', 'Email', 'Location', 'Last Donation')
+        columns = ('Name', 'Blood Type', 'Phone', 'Email', 'Location')
         self.donor_tree = ttk.Treeview(list_frame, columns=columns, show='headings')
         
         for col in columns:
@@ -230,7 +232,7 @@ class BloodBankApp:
             'phone': self.donor_entries['phone'].get(),
             'email': self.donor_entries['email'].get(),
             'location': self.donor_entries['location'].get(),
-            'last_donation': datetime.now().strftime('%Y-%m-%d')  # Add last_donation
+            'quantity_ml': self.donor_entries['quantity_ml'].get()
         }
         
         # Validate data
@@ -246,16 +248,17 @@ class BloodBankApp:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO donors (donor_name, blood_type, phone, email, location, medical_report, last_donation)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO donors (donor_name, blood_type, phone, email, location, quantity_ml, hospital, medical_report)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 donor_data['donor_name'],
                 donor_data['blood_type'],
                 donor_data['phone'],
                 donor_data['email'],
                 donor_data['location'],
-                files['medical_report'].name if files else None,
-                donor_data['last_donation']
+                donor_data['quantity_ml'],  # Added field
+                self.hospital_name,
+                files['medical_report'].name if files else None
             ))
             conn.commit()
             conn.close()
@@ -331,7 +334,7 @@ class BloodBankApp:
         try:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
-            cursor.execute('SELECT donor_name, blood_type, phone, email, location, last_donation FROM donors')
+            cursor.execute('SELECT donor_name, blood_type, phone, email, location FROM donors')
             donors = cursor.fetchall()
             conn.close()
             
@@ -413,6 +416,9 @@ class BloodBankApp:
         cursor.execute('DELETE FROM users WHERE username = ?', (username,))
         conn.commit()
         conn.close()
+
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()

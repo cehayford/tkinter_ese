@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def init_database():
     conn = sqlite3.connect('bloodbank_users.db')
     cursor = conn.cursor()
@@ -11,8 +12,7 @@ def init_database():
             password TEXT NOT NULL,
             email TEXT NOT NULL,
             role TEXT NOT NULL,
-            hospital_name TEXT,
-            donor_id TEXT
+            hospital_name TEXT
         )
     ''')
     
@@ -26,7 +26,9 @@ def init_database():
             email TEXT NOT NULL,
             location TEXT NOT NULL,
             medical_report TEXT,
-            last_donation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  # Ensure last_donation column is added
+            quantity_ml INTEGER,
+            hospital TEXT NOT NULL,
+            last_donation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -44,6 +46,7 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
     
     conn.commit()
     conn.close()

@@ -1,5 +1,9 @@
 import sqlite3
+import hashlib
 
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def init_database():
     conn = sqlite3.connect('bloodbank_users.db')
@@ -46,6 +50,20 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    admin_username = "admin1"
+    admin_password = hash_password("admin123")
+    admin_email = "admin@bloodbank.com"
+    
+    cursor.execute('SELECT username FROM users WHERE username = ?', (admin_username,))
+    if not cursor.fetchone():
+        cursor.execute('''
+            INSERT INTO users (username, password, email, role, hospital_name)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (admin_username, admin_password, admin_email, "admin", None))
+        print("Admin user created successfully.")
+    else:
+        print("Admin user already exists.")
     
     
     conn.commit()

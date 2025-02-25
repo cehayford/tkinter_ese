@@ -26,18 +26,16 @@ class BloodBankApp:
 
     def setup_hospital_view(self):
         # Create hospital tabs
-        self.dashboard_frame = ttk.Frame(self.notebook)
         self.donor_reg_frame = ttk.Frame(self.notebook)
         self.requests_frame = ttk.Frame(self.notebook)
         
-        self.notebook.add(self.dashboard_frame, text="Dashboard")
         self.notebook.add(self.donor_reg_frame, text="Register Donor")
         self.notebook.add(self.requests_frame, text="Blood Requests")
         
-        self.setup_dashboard()
         self.setup_donor_management()
         self.setup_blood_requests()
 
+    
     def setup_donor_management(self):
         # Donor Form
         form_frame = ttk.LabelFrame(self.donor_reg_frame, text="Add New Donor")

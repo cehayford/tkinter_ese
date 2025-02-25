@@ -38,32 +38,6 @@ class BloodBankApp:
         self.setup_donor_management()
         self.setup_blood_requests()
 
-    def setup_dashboard(self):
-        # Dashboard Header
-        ttk.Label(self.dashboard_frame, text="Blood Bank Dashboard", 
-                 font=('Arial', 20, 'bold')).pack(pady=20)
-        
-        # Create stats frames
-        stats_frame = ttk.Frame(self.dashboard_frame)
-        stats_frame.pack(fill='x', padx=20)
-        
-        # Statistics boxes
-        stats = [
-            ("Total Donors", "donor_count"),
-            ("Available Blood Units", "blood_units"),
-            ("Pending Requests", "pending_requests"),
-            ("Centers", "center_count")
-        ]
-        
-        for i, (label, stat_id) in enumerate(stats):
-            stat_frame = ttk.LabelFrame(stats_frame, text=label)
-            stat_frame.grid(row=0, column=i, padx=10, pady=10, sticky='nsew')
-            ttk.Label(stat_frame, text="Loading...", font=('Arial', 16)).pack(pady=20)
-        
-        # Refresh button
-        ttk.Button(self.dashboard_frame, text="Refresh Dashboard",
-                  command=self.refresh_dashboard).pack(pady=20)
-
     def setup_donor_management(self):
         # Donor Form
         form_frame = ttk.LabelFrame(self.donor_reg_frame, text="Add New Donor")

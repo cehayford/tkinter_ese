@@ -1,4 +1,9 @@
-def show_edit_donor_form(self, donor_data):
+import tkinter as tk
+from tkinter import ttk, messagebox
+import sqlite3
+
+
+def show_edit_donor_form(self):
     # Create a new top-level window for editing
     edit_window = tk.Toplevel(self.root)
     edit_window.title("Edit Donor")
@@ -13,6 +18,12 @@ def show_edit_donor_form(self, donor_data):
     ttk.Label(frame, text="Edit Donor Information", font=('Helvetica', 16, 'bold')).pack(pady=10)
     
     # Donor ID (hidden)
+    selected_item = self.donor_tree.selection()
+    if not selected_item:
+        messagebox.showerror("Error", "Please select a donor to edit", parent=edit_window)
+        edit_window.destroy()
+        return
+    donor_data = self.donor_tree.item(selected_item)['values']
     donor_id = donor_data[5]
     
     # Create form fields
@@ -47,7 +58,10 @@ def show_edit_donor_form(self, donor_data):
         
         # Set current value
         if value:
-            edit_entries[field_name].insert(0, value)
+            if isinstance(edit_entries[field_name], ttk.Combobox):
+                edit_entries[field_name].set(value)
+            else:
+                edit_entries[field_name].insert(0, value)
     
     # Try to fetch additional donor data from database if needed
     try:
@@ -68,7 +82,7 @@ def show_edit_donor_form(self, donor_data):
     # Save button
     def save_changes():
         # Validation
-        if not all(edit_entries[field].get() for field_name, field in edit_entries.items()):
+        if not all(edit_entries[field_name].get() for field_name in edit_entries):
             messagebox.showerror("Error", "All fields are required!", parent=edit_window)
             return
         
@@ -101,7 +115,7 @@ def show_edit_donor_form(self, donor_data):
     ttk.Button(button_frame, text="Cancel", command=edit_window.destroy, width=15).pack(side='left', padx=5)
 
 
-def show_edit_request_form(self, request_data):
+def show_edit_request_form(self):
     # Create a new top-level window for editing
     edit_window = tk.Toplevel(self.root)
     edit_window.title("Edit Blood Request")
@@ -116,6 +130,12 @@ def show_edit_request_form(self, request_data):
     ttk.Label(frame, text="Edit Blood Request", font=('Helvetica', 16, 'bold')).pack(pady=10)
     
     # Request ID (hidden)
+    selected_item = self.request_tree.selection()
+    if not selected_item:
+        messagebox.showerror("Error", "Please select a request to edit", parent=edit_window)
+        edit_window.destroy()
+        return 
+    request_data = self.request_tree.item(selected_item)['values']
     request_id = request_data[6]
     
     # Create form fields

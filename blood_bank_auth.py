@@ -1,13 +1,13 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-import requests
-from datetime import datetime
+from tkinter import ttk, messagebox
 import sqlite3
 import hashlib
-import json
-from blood_bank_tkinter import BloodBankApp
+import logging
+
 
 class BloodBankAuth:
+    logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+    
     def __init__(self, root):
         self.root = root
         self.root.title("Blood Bank Management System")
@@ -174,17 +174,18 @@ class BloodBankAuth:
 
     def load_donor_history(self, donor_id):
         try:
-            response = requests.get(f'{self.API_BASE_URL}/donor-history/{donor_id}/')
-            if response.status_code == 200:
-                history = response.json()
-                for donation in history:
-                    self.history_tree.insert('', 'end', values=(
-                        donation['date'],
-                        donation['blood_type'],
-                        donation['quantity'],
-                        donation['center']
-                    ))
-        except requests.RequestException:
+            conn = sqlite3.connect('bloodbank_users.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT last_donation, blood_type, quantity_ml, hospital
+                FROM donors WHERE donor_id = ?
+            ''', (donor_id,))
+            history = cursor.fetchall()
+            conn.close()
+            for donation in history:
+                self.history_tree.insert('', 'end', values=donation)
+        except sqlite3.Error as e:
+            logging.error(f"Database error: {e}")
             messagebox.showerror("Error", "Failed to fetch donation history")
 
 

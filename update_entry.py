@@ -4,20 +4,15 @@ import sqlite3
 
 
 def show_edit_donor_form(self):
-    # Create a new top-level window for editing
     edit_window = tk.Toplevel(self.root)
     edit_window.title("Edit Donor")
     edit_window.geometry("500x500")
-    edit_window.grab_set()  # Make window modal
+    edit_window.grab_set()
     
-    # Create a frame with padding
     frame = ttk.Frame(edit_window, padding="20")
     frame.pack(fill='both', expand=True)
-    
-    # Header
     ttk.Label(frame, text="Edit Donor Information", font=('Helvetica', 16, 'bold')).pack(pady=10)
     
-    # Donor ID (hidden)
     selected_item = self.donor_tree.selection()
     if not selected_item:
         messagebox.showerror("Error", "Please select a donor to edit", parent=edit_window)
@@ -26,7 +21,6 @@ def show_edit_donor_form(self):
     donor_data = self.donor_tree.item(selected_item)['values']
     donor_id = donor_data[5]
     
-    # Create form fields
     fields = [
         ("Donor Name:", "donor_name", ttk.Entry, donor_data[0]),
         ("Blood Type:", "blood_type", ttk.Combobox, donor_data[1]),
@@ -36,34 +30,27 @@ def show_edit_donor_form(self):
         ("Quantity (ml):", "quantity_ml", ttk.Entry, "") # This might need to be fetched from the database
     ]
     
-    # Dictionary to store entry widgets
     edit_entries = {}
     
-    # Create labeled input fields
     for i, (label, field_name, widget, value) in enumerate(fields):
-        # Create a frame for each field
         field_frame = ttk.Frame(frame)
         field_frame.pack(fill='x', pady=5)
-        
-        # Add label
+
         ttk.Label(field_frame, text=label, width=15).pack(side='left')
-        
-        # Add entry widget
+
         if widget == ttk.Combobox:
             edit_entries[field_name] = widget(field_frame, values=['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'])
         else:
             edit_entries[field_name] = widget(field_frame, width=30)
         
         edit_entries[field_name].pack(side='left', fill='x', expand=True, padx=5)
-        
-        # Set current value
+
         if value:
             if isinstance(edit_entries[field_name], ttk.Combobox):
                 edit_entries[field_name].set(value)
             else:
                 edit_entries[field_name].insert(0, value)
-    
-    # Try to fetch additional donor data from database if needed
+
     try:
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
@@ -75,13 +62,10 @@ def show_edit_donor_form(self):
     except sqlite3.Error as e:
         messagebox.showerror("Error", f"Failed to fetch complete donor data: {str(e)}")
     
-    # Button frame
     button_frame = ttk.Frame(frame)
     button_frame.pack(pady=20)
     
-    # Save button
     def save_changes():
-        # Validation
         if not all(edit_entries[field_name].get() for field_name in edit_entries):
             messagebox.showerror("Error", "All fields are required!", parent=edit_window)
             return
@@ -116,20 +100,16 @@ def show_edit_donor_form(self):
 
 
 def show_edit_request_form(self):
-    # Create a new top-level window for editing
     edit_window = tk.Toplevel(self.root)
     edit_window.title("Edit Blood Request")
     edit_window.geometry("500x550")
-    edit_window.grab_set()  # Make window modal
+    edit_window.grab_set()
     
-    # Create a frame with padding
     frame = ttk.Frame(edit_window, padding="20")
     frame.pack(fill='both', expand=True)
     
-    # Header
     ttk.Label(frame, text="Edit Blood Request", font=('Helvetica', 16, 'bold')).pack(pady=10)
     
-    # Request ID (hidden)
     selected_item = self.request_tree.selection()
     if not selected_item:
         messagebox.showerror("Error", "Please select a request to edit", parent=edit_window)
@@ -138,7 +118,6 @@ def show_edit_request_form(self):
     request_data = self.request_tree.item(selected_item)['values']
     request_id = request_data[6]
     
-    # Create form fields
     fields = [
         ("Patient Name:", "patient_name", ttk.Entry, request_data[0]),
         ("Blood Type:", "blood_type", ttk.Combobox, request_data[1]),
@@ -148,19 +127,14 @@ def show_edit_request_form(self):
         ("Location:", "location", ttk.Entry, "")  # This needs to be fetched from the database
     ]
     
-    # Dictionary to store entry widgets
     edit_entries = {}
-    
-    # Create labeled input fields
+
     for i, (label, field_name, widget, value) in enumerate(fields):
-        # Create a frame for each field
         field_frame = ttk.Frame(frame)
         field_frame.pack(fill='x', pady=5)
         
-        # Add label
         ttk.Label(field_frame, text=label, width=15).pack(side='left')
         
-        # Add entry widget
         if widget == ttk.Combobox:
             if field_name == "blood_type":
                 edit_entries[field_name] = widget(field_frame, values=['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'])
@@ -173,14 +147,12 @@ def show_edit_request_form(self):
         
         edit_entries[field_name].pack(side='left', fill='x', expand=True, padx=5)
         
-        # Set current value
         if value:
             if isinstance(edit_entries[field_name], ttk.Combobox):
                 edit_entries[field_name].set(value)
             else:
                 edit_entries[field_name].insert(0, value)
     
-    # Try to fetch additional request data from database if needed
     try:
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
@@ -192,7 +164,6 @@ def show_edit_request_form(self):
     except sqlite3.Error as e:
         messagebox.showerror("Error", f"Failed to fetch complete request data: {str(e)}")
     
-    # Additional notes field
     notes_frame = ttk.LabelFrame(frame, text="Additional Notes")
     notes_frame.pack(fill='x', pady=10, padx=5)
     
@@ -209,15 +180,12 @@ def show_edit_request_form(self):
             notes_text.insert('1.0', result[0])
         conn.close()
     except sqlite3.Error:
-        pass  # Just ignore if notes field doesn't exist
+        pass
     
-    # Button frame
     button_frame = ttk.Frame(frame)
     button_frame.pack(pady=20)
     
-    # Save button
     def save_changes():
-        # Validation for required fields
         required_fields = ['patient_name', 'blood_type', 'quantity_ml', 'hospital', 'status']
         if not all(edit_entries[field].get() for field in required_fields):
             messagebox.showerror("Error", "All fields except notes are required!", parent=edit_window)
@@ -226,14 +194,12 @@ def show_edit_request_form(self):
         try:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
-            
-            # First check if notes column exists, add it if it doesn't
+
             try:
                 cursor.execute("SELECT notes FROM blood_requests LIMIT 1")
             except sqlite3.OperationalError:
                 cursor.execute("ALTER TABLE blood_requests ADD COLUMN notes TEXT")
-            
-            # Update the request
+
             cursor.execute('''
                 UPDATE blood_requests 
                 SET patient_name=?, blood_group=?, quantity_ml=?, hospital=?, status=?, location=?, notes=?

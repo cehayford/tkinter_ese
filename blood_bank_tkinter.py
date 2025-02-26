@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import requests
 import sqlite3
 from blood_bank_admin import BloodBankAdmin 
 import update_entry

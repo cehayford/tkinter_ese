@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
 import sqlite3
-import requests
+import admin_approval as approve_frame
 
 class BloodBankAdmin:
     def __init__(self, parent):
@@ -26,6 +26,7 @@ class BloodBankAdmin:
         self.setup_donors_view()
         self.setup_hospitals_view()
         self.setup_requests_view()
+        approve_frame.setup_request_approval(self)
 
     def setup_admin_dashboard(self):
         # Dashboard Header
@@ -82,7 +83,7 @@ class BloodBankAdmin:
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
         
         # Create treeview
-        columns = ('Hospital Name', 'Location', 'Phone', 'Email')
+        columns = ('Hospital Name', 'Email')
         self.hospital_tree = ttk.Treeview(list_frame, columns=columns, show='headings')
         
         for col in columns:
@@ -124,15 +125,59 @@ class BloodBankAdmin:
 
     def refresh_dashboard(self):
         try:
-            response = requests.get(f'{self.API_BASE_URL}/dashboard-stats/')
-            if response.status_code == 200:
-                stats = response.json()
-                # Update dashboard statistics
-                pass
-            else:
-                messagebox.showerror("Error", "Failed to fetch dashboard data")
-        except requests.RequestException:
-            messagebox.showerror("Error", "Failed to connect to server")
+            conn = sqlite3.connect('bloodbank_users.db')
+            cursor = conn.cursor()
+            
+            # Get total donors count
+            cursor.execute('SELECT COUNT(*) FROM donors')
+            donor_count = cursor.fetchone()[0]
+            
+            # Get available blood units (sum of all quantities)
+            cursor.execute('SELECT COALESCE(SUM(quantity_ml), 0) FROM donors')
+            blood_units = cursor.fetchone()[0]
+            
+            # Get pending requests count
+            cursor.execute('SELECT COUNT(*) FROM blood_requests WHERE status = "Pending"')
+            pending_requests = cursor.fetchone()[0]
+            
+            # Get count of unique centers/hospitals
+            cursor.execute('SELECT COUNT(DISTINCT hospital_name) FROM users WHERE hospital_name IS NOT NULL')
+            center_count = cursor.fetchone()[0]
+            
+            conn.close()
+            
+            # Update dashboard statistics
+            stats_data = {
+                "donor_count": donor_count,
+                "blood_units": f"{blood_units}ML",
+                "pending_requests": pending_requests,
+                "center_count": center_count
+            }
+            
+            # Find and update the stat labels
+            for child in self.dashboard_frame.winfo_children():
+                if isinstance(child, ttk.Frame):
+                    for stat_frame in child.winfo_children():
+                        if isinstance(stat_frame, ttk.LabelFrame):
+                            stat_name = stat_frame.cget("text")
+                            stat_id = None
+                            
+                            if stat_name == "Total Donors":
+                                stat_id = "donor_count"
+                            elif stat_name == "Available Blood Units":
+                                stat_id = "blood_units"
+                            elif stat_name == "Pending Requests":
+                                stat_id = "pending_requests"
+                            elif stat_name == "Centers":
+                                stat_id = "center_count"
+                            
+                            if stat_id:
+                                for widget in stat_frame.winfo_children():
+                                    if isinstance(widget, ttk.Label):
+                                        widget.config(text=stats_data[stat_id])
+                                        break
+        except sqlite3.Error as e:
+            messagebox.showerror("Error", f"Failed to fetch dashboard data: {str(e)}")
 
     def refresh_donor_list(self):
         # Clear existing items
@@ -159,7 +204,7 @@ class BloodBankAdmin:
         try:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
-            cursor.execute('SELECT hospital_name, location, phone, email FROM hospitals')
+            cursor.execute('SELECT DISTINCT hospital_name, email FROM users WHERE hospital_name IS NOT NULL ORDER BY hospital_name')
             hospitals = cursor.fetchall()
             conn.close()
             
@@ -184,3 +229,16 @@ class BloodBankAdmin:
                 self.request_tree.insert('', 'end', values=req)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch request list: {str(e)}")
+
+    def on_request_select(self, event):
+        approve_frame.on_request_select(self, event)
+
+    def approve_request(self):
+        approve_frame.approve_request(self)
+
+    def reject_request(self):
+        approve_frame.reject_request(self)
+
+    def find_compatible_donors(self, blood_type, quantity_needed):
+        approve_frame.find_compatible_donors(self, blood_type, quantity_needed)
+

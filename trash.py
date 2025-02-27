@@ -1,17 +1,50 @@
-    def show_admin_dashboard(self):
-        self.clear_frame()
-        app = BloodBankApp(self.root, self.main_frame, self.current_user, "admin")
+# Right side - Hospital selection
+    right_frame = ttk.Frame(details_frame)
+    right_frame.pack(side='right', fill='both', expand=True, padx=10)
+    
+    ttk.Label(right_frame, text="Select Blood Provider:").pack(anchor='w', pady=2)
+    
+    # Create treeview for compatible donors
+    columns = ('Hospital', 'Donor Name', 'Blood Type', 'Quantity Available')
+    self.donor_select_tree = ttk.Treeview(right_frame, columns=columns, show='headings', height=5)
+    
+    for col in columns:
+        self.donor_select_tree.heading(col, text=col)
+        self.donor_select_tree.column(col, width=100)
+    
+    self.donor_select_tree.pack(pady=5, fill='x')
+    
+
+
+
+
+
+
+
+
+
+
+    try:
+        conn = sqlite3.connect('bloodbank_users.db')
+        cursor = conn.cursor()
         
-        # Add logout button
-        ttk.Button(self.main_frame, text="Logout", 
-                  command=self.logout).pack(pady=10)
-
-
-
-    def show_hospital_dashboard(self, hospital_name):
-        self.clear_frame()
-        app = BloodBankApp(self.root, self.main_frame, self.current_user, "hospital", hospital_name)
+        # Update request status
+        cursor.execute(
+            """UPDATE blood_requests 
+               SET status = 'Approved', 
+                   provider_hospital = ?, 
+                   provider_donor = ?,
+                   approved_at = CURRENT_TIMESTAMP
+               WHERE rowid = ?""", 
+            (donor_hospital, donor_name, self.selected_request_id)
+        )
         
-        # Add logout button
-        ttk.Button(self.main_frame, text="Logout", 
-                  command=self.logout).pack(pady=10)
+
+
+
+
+
+
+
+
+        

@@ -37,6 +37,7 @@ class BloodBankAuth:
                 donor_id TEXT
             )
         ''')
+
         conn.commit()
         conn.close()
 

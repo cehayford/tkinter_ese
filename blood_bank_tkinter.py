@@ -4,8 +4,9 @@ import sqlite3
 from blood_bank_admin import BloodBankAdmin 
 import admin_update_entry
 
+
 class BloodBankApp:
-    def __init__(self, root, parent, username, role, hospital_name=None):
+    def __init__(self, root, parent, username, role, hospital_name=None, logout_callback=None):
         self.root = root
         self.root.title("Blood Bank Management System")
         self.root.geometry("1024x768")
@@ -13,14 +14,26 @@ class BloodBankApp:
         self.username = username
         self.role = role
         self.hospital_name = hospital_name
+        self.logout_callback = logout_callback
+        
+        self.logout_frame = ttk.Frame(self.parent)
+        self.logout_frame.pack(fill='x')
+        ttk.Button(self.logout_frame, text="Logout", command=self.logout).pack(pady=2)
         
         self.notebook = ttk.Notebook(self.parent)
-        self.notebook.pack(pady=10, expand=True, fill='both')
+        self.notebook.pack(pady=0, expand=True, fill='both')
         
         if self.role == "admin":
             self.admin = BloodBankAdmin(self.parent)
         elif self.role == "hospital":
             self.setup_hospital_view()
+
+
+    def logout(self):
+        if self.logout_callback:
+            self.logout_callback()
+        else:
+            self.root.destroy()
 
 
     def setup_hospital_view(self):
@@ -33,7 +46,6 @@ class BloodBankApp:
         self.setup_donor_management()
         self.setup_blood_requests()
         self.root.after(100, self.refresh_donor_list)
-
 
     def add_scrollbar(self, frame):
         canvas = tk.Canvas(frame)
@@ -54,7 +66,6 @@ class BloodBankApp:
         scrollbar.pack(side="right", fill="y")
 
         return scrollable_frame
-
 
     def setup_donor_management(self):
         form_frame = ttk.LabelFrame(self.donor_reg_frame, text="Add New Donor")
@@ -99,7 +110,7 @@ class BloodBankApp:
             self.donor_tree.heading(col, text=col)
             self.donor_tree.column(col, width=100)
         
-        self.donor_tree.pack(pady=10, fill='both', expand=True)
+        self.donor_tree.pack(pady=4, fill='both', expand=True)
 
         scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.donor_tree.yview)
         scrollbar.pack(side='right', fill='y')
@@ -107,7 +118,6 @@ class BloodBankApp:
         
         ttk.Button(list_frame, text="Edit Donor", command=self.edit_donor).pack(side='left', padx=5, pady=5)
         ttk.Button(list_frame, text="Delete Donor", command=self.delete_donor).pack(side='left', padx=5, pady=5)
-
 
     def setup_transfusion_center(self):
         form_frame = ttk.LabelFrame(self.transfusion_frame, text="Transfusion Center Details")
@@ -137,7 +147,6 @@ class BloodBankApp:
             self.inventory_tree.column(col, width=100)
         
         self.inventory_tree.pack(pady=10, fill='both', expand=True)
-
 
     def setup_blood_requests(self):
         form_frame = ttk.LabelFrame(self.requests_frame, text="New Blood Request")
@@ -175,7 +184,7 @@ class BloodBankApp:
             self.request_tree.heading(col, text=col)
             self.request_tree.column(col, width=100)
         
-        self.request_tree.pack(pady=10, fill='both', expand=True)
+        self.request_tree.pack(pady=4, fill='both', expand=True)
         
         scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.request_tree.yview)
         scrollbar.pack(side='right', fill='y')
@@ -186,14 +195,12 @@ class BloodBankApp:
 
         self.refresh_request_list()
 
-
     def browse_file(self):
         filename = filedialog.askopenfilename(
             filetypes=[("Image files", "*.jpg *.png *.pdf")]
         )
         if filename:
             self.report_path.set(filename)
-
 
     def register_donor(self): 
         donor_data = {
@@ -236,7 +243,6 @@ class BloodBankApp:
         except Exception as e:
             messagebox.showerror("Error", f"Error: {str(e)}")
 
-
     def submit_request(self):
         request_data = {
             'patient_name': self.request_entries['patient_name'].get(),
@@ -272,17 +278,14 @@ class BloodBankApp:
         except Exception as e:
             messagebox.showerror("Error", f"Error: {str(e)}")
 
-
     def clear_donor_form(self):
         for entry in self.donor_entries.values():
             entry.delete(0, tk.END)
         self.report_path.set('')
 
-
     def clear_request_form(self):
         for entry in self.request_entries.values():
             entry.delete(0, tk.END)
-
 
     def refresh_donor_list(self):
         for item in self.donor_tree.get_children():
@@ -300,7 +303,6 @@ class BloodBankApp:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch donor list: {str(e)}")
 
-
     def refresh_request_list(self):
         for item in self.request_tree.get_children():
             self.request_tree.delete(item)
@@ -316,7 +318,6 @@ class BloodBankApp:
                 self.request_tree.insert('', 'end', values=req)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch request list: {str(e)}")
-
 
     def init_database(self):
         conn = sqlite3.connect('bloodbank_users.db')
@@ -334,7 +335,6 @@ class BloodBankApp:
         conn.commit()
         conn.close()
 
-
     def create_user(self, username, password, email, role, hospital_name=None, donor_id=None):
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
@@ -345,7 +345,6 @@ class BloodBankApp:
         conn.commit()
         conn.close()
 
-
     def retrieve_user(self, username):
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
@@ -353,7 +352,6 @@ class BloodBankApp:
         user = cursor.fetchone()
         conn.close()
         return user
-
 
     def update_user(self, username, password=None, email=None, role=None, hospital_name=None, donor_id=None):
         conn = sqlite3.connect('bloodbank_users.db')
@@ -371,14 +369,12 @@ class BloodBankApp:
         conn.commit()
         conn.close()
 
-
     def delete_user(self, username):
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
         cursor.execute('DELETE FROM users WHERE username = ?', (username,))
         conn.commit()
         conn.close()
-
 
     def setup_donors_view(self):
         list_frame = ttk.LabelFrame(self.donors_frame, text="Donor List")
@@ -399,7 +395,6 @@ class BloodBankApp:
         
         self.refresh_donor_list()
 
-
     def setup_hospitals_view(self):
         list_frame = ttk.LabelFrame(self.hospitals_frame, text="Hospital List")
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
@@ -418,7 +413,6 @@ class BloodBankApp:
         self.hospital_tree.configure(yscrollcommand=scrollbar.set)
 
         self.refresh_hospital_list()
-
 
     def setup_requests_view(self):
         list_frame = ttk.LabelFrame(self.requests_frame, text="Blood Requests")
@@ -439,7 +433,6 @@ class BloodBankApp:
 
         self.refresh_request_list()
 
-
     def refresh_donor_list(self):
         for item in self.donor_tree.get_children():
             self.donor_tree.delete(item)
@@ -455,7 +448,6 @@ class BloodBankApp:
                 self.donor_tree.insert('', 'end', values=donor)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch donor list: {str(e)}")
-
 
     def refresh_hospital_list(self):
         for item in self.hospital_tree.get_children():
@@ -473,7 +465,6 @@ class BloodBankApp:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch hospital list: {str(e)}")
 
-
     def refresh_request_list(self):
         for item in self.request_tree.get_children():
             self.request_tree.delete(item)
@@ -490,14 +481,11 @@ class BloodBankApp:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch request list: {str(e)}")
 
-
     def edit_donor(self):
         admin_update_entry.show_edit_donor_form(self)
 
-
     def edit_request(self):
         admin_update_entry.show_edit_request_form(self)
-
 
     def delete_donor(self):
         selected_item = self.donor_tree.selection()
@@ -524,7 +512,6 @@ class BloodBankApp:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to delete donor: {str(e)}")
 
-
     def delete_request(self):
         selected_item = self.request_tree.selection()
         if not selected_item:
@@ -548,10 +535,10 @@ class BloodBankApp:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to delete request: {str(e)}")
 
-
     def clear_frame(self):
         for widget in self.parent.winfo_children():
             widget.destroy()
+
 
 if __name__ == "__main__":
     root = tk.Tk()

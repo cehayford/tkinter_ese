@@ -6,11 +6,19 @@ class BloodBankAdmin:
     def __init__(self, parent):
         self.parent = parent
         self.setup_admin_view()
+        ttk.Button(self.parent, text="Logout", command=self.logout).pack(pady=2)
+
+
+    def logout(self):
+        if self.logout_callback:
+            self.logout_callback()
+        else:
+            self.root.destroy()
 
 
     def setup_admin_view(self):
         self.notebook = ttk.Notebook(self.parent)
-        self.notebook.pack(pady=10, expand=True, fill='both')
+        self.notebook.pack(pady=0, expand=True, fill='both')
 
         self.dashboard_frame = ttk.Frame(self.notebook)
         self.donors_frame = ttk.Frame(self.notebook)
@@ -28,6 +36,7 @@ class BloodBankAdmin:
         self.setup_requests_view()
         approve_frame.setup_request_approval(self)
 
+        ttk.Button(self.parent, text="Logout", command=self.logout).pack(pady=2)
 
     def setup_admin_dashboard(self):
         ttk.Label(self.dashboard_frame, text="Adminstrator Dashboard", 
@@ -48,7 +57,6 @@ class BloodBankAdmin:
         ttk.Button(self.dashboard_frame, text="Refresh",
                   command=self.refresh_dashboard).pack(pady=20)
 
-
     def setup_donors_view(self):
         list_frame = ttk.LabelFrame(self.donors_frame, text="Donor List")
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
@@ -60,12 +68,11 @@ class BloodBankAdmin:
             self.donor_tree.column(col, width=100)
         self.donor_tree.pack(pady=10, fill='both', expand=True)
 
-        scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.donor_tree.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.donor_tree.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.donor_tree.yview)
+        # scrollbar.pack(side='right', fill='both')
+        # self.donor_tree.configure(yscrollcommand=scrollbar.set)
         
         self.refresh_donor_list()
-
 
     def setup_hospitals_view(self):
         list_frame = ttk.LabelFrame(self.hospitals_frame, text="Hospital List")
@@ -79,11 +86,10 @@ class BloodBankAdmin:
         
         self.hospital_tree.pack(pady=10, fill='both', expand=True)
         
-        scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.hospital_tree.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.hospital_tree.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.hospital_tree.yview)
+        # scrollbar.pack(side='right', fill='y')
+        # self.hospital_tree.configure(yscrollcommand=scrollbar.set)
         self.refresh_hospital_list()
-
 
     def setup_requests_view(self):
         list_frame = ttk.LabelFrame(self.requests_frame, text="Blood Requests")
@@ -98,12 +104,11 @@ class BloodBankAdmin:
         
         self.request_tree.pack(pady=10, fill='both', expand=True)
 
-        scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.request_tree.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.request_tree.configure(yscrollcommand=scrollbar.set)
+        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.request_tree.yview)
+        # scrollbar.pack(side='right', fill='y')
+        # self.request_tree.configure(yscrollcommand=scrollbar.set)
         
         self.refresh_request_list()
-
 
     def refresh_dashboard(self):
         try:
@@ -153,7 +158,6 @@ class BloodBankAdmin:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch dashboard data: {str(e)}")
 
-
     def refresh_donor_list(self):
         for item in self.donor_tree.get_children():
             self.donor_tree.delete(item)
@@ -170,7 +174,6 @@ class BloodBankAdmin:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch donor list: {str(e)}")
 
-
     def refresh_hospital_list(self):
         for item in self.hospital_tree.get_children():
             self.hospital_tree.delete(item)
@@ -186,7 +189,6 @@ class BloodBankAdmin:
                 self.hospital_tree.insert('', 'end', values=hospital)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch hospital list: {str(e)}")
-
 
     def refresh_request_list(self):
         for item in self.request_tree.get_children():
@@ -205,7 +207,6 @@ class BloodBankAdmin:
                 self.request_tree.insert('', 'end', text=str(rowid), values=values)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch request list: {str(e)}")
-    
     
     def on_request_select(self, event):
         approve_frame.on_request_select(self, event)

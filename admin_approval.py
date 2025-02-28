@@ -2,7 +2,6 @@ from tkinter import ttk, messagebox
 import sqlite3
 
 def setup_request_approval(self):
-    # Create approval frame as a child of requests_frame
     self.approval_frame = ttk.LabelFrame(self.requests_frame, text="Approve Blood Request")
     self.approval_frame.pack(padx=20, pady=10, fill='x')
     

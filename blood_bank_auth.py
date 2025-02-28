@@ -8,7 +8,6 @@ from blood_bank_tkinter import BloodBankApp
 
 class BloodBankAuth:
     logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
-    
     def __init__(self, root):
         self.root = root
         self.root.title("Blood Bank Management System")
@@ -53,7 +52,7 @@ class BloodBankAuth:
 
     def show_login(self):
         self.clear_frame()
-        ttk.Label(self.main_frame, text="Blood Bank Login", font=('Helvetica', 16, 'bold')).pack(pady=10)
+        ttk.Label(self.main_frame, text="Blood Bank Sign-In", font=('Helvetica', 16, 'bold')).pack(pady=10)
         ttk.Label(self.main_frame, text="Username:").pack()
         username_entry = ttk.Entry(self.main_frame)
         username_entry.pack(pady=5)
@@ -144,7 +143,7 @@ class BloodBankAuth:
                 self.hash_password(password),
                 role,
                 extra_field if role == "hospital" else None,
-                None  # donor_id will be updated after donor registration
+                None 
             ))
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
@@ -154,23 +153,22 @@ class BloodBankAuth:
         finally:
             conn.close()
 
+
     def show_admin_dashboard(self):
         self.clear_frame()
         app = BloodBankApp(self.root, self.main_frame, self.current_user, "admin")
         
-        # Add logout button
         ttk.Button(self.main_frame, text="Logout", 
                   command=self.logout).pack(pady=10)
-
 
 
     def show_hospital_dashboard(self, hospital_name):
         self.clear_frame()
         app = BloodBankApp(self.root, self.main_frame, self.current_user, "hospital", hospital_name)
         
-        # Add logout button
         ttk.Button(self.main_frame, text="Logout", 
                   command=self.logout).pack(pady=10)
+
 
     def show_donor_dashboard(self, donor_id):
         self.clear_frame()

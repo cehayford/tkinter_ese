@@ -7,8 +7,8 @@ class BloodBankAdmin:
         self.parent = parent
         self.setup_admin_view()
 
+
     def setup_admin_view(self):
-        # Create admin tabs
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.pack(pady=10, expand=True, fill='both')
 
@@ -32,57 +32,44 @@ class BloodBankAdmin:
     def setup_admin_dashboard(self):
         ttk.Label(self.dashboard_frame, text="Adminstrator Dashboard", 
                  font=('Arial', 20, 'bold')).pack(pady=20)
-        
-        # Create stats frames
         stats_frame = ttk.Frame(self.dashboard_frame)
         stats_frame.pack(fill='x', padx=20)
-        
-        # Statistics boxes
         stats = [
             ("Total Donors", "donor_count"),
             ("Available Blood Units", "blood_units"),
             ("Pending Requests", "pending_requests"),
             ("Centers", "center_count")
         ]
-        
         for i, (label, stat_id) in enumerate(stats):
             stat_frame = ttk.LabelFrame(stats_frame, text=label)
             stat_frame.grid(row=0, column=i, padx=10, pady=10, sticky='nsew')
             ttk.Label(stat_frame, text="Loading...", font=('Arial', 16)).pack(pady=20)
-        
-        # Refresh button
+
         ttk.Button(self.dashboard_frame, text="Refresh",
                   command=self.refresh_dashboard).pack(pady=20)
 
+
     def setup_donors_view(self):
-        # Donor List
         list_frame = ttk.LabelFrame(self.donors_frame, text="Donor List")
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
-        
-        # Create treeview
+
         columns = ('Name', 'Blood Type', 'Phone', 'Email', 'Location', 'Quantity', 'Hospital')
         self.donor_tree = ttk.Treeview(list_frame, columns=columns, show='headings')
-        
         for col in columns:
             self.donor_tree.heading(col, text=col)
             self.donor_tree.column(col, width=100)
-        
         self.donor_tree.pack(pady=10, fill='both', expand=True)
-        
-        # Scrollbar
+
         scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.donor_tree.yview)
         scrollbar.pack(side='right', fill='y')
         self.donor_tree.configure(yscrollcommand=scrollbar.set)
         
-        # Load donors data
         self.refresh_donor_list()
 
+
     def setup_hospitals_view(self):
-        # Hospital List
         list_frame = ttk.LabelFrame(self.hospitals_frame, text="Hospital List")
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
-        
-        # Create treeview
         columns = ('Hospital Name', 'Email')
         self.hospital_tree = ttk.Treeview(list_frame, columns=columns, show='headings')
         
@@ -92,20 +79,16 @@ class BloodBankAdmin:
         
         self.hospital_tree.pack(pady=10, fill='both', expand=True)
         
-        # Scrollbar
         scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.hospital_tree.yview)
         scrollbar.pack(side='right', fill='y')
         self.hospital_tree.configure(yscrollcommand=scrollbar.set)
-        
-        # Load hospitals data
         self.refresh_hospital_list()
 
+
     def setup_requests_view(self):
-        # Request List
         list_frame = ttk.LabelFrame(self.requests_frame, text="Blood Requests")
         list_frame.pack(padx=20, pady=10, fill='both', expand=True)
-        
-        # Create treeview
+
         columns = ('Patient', 'Blood Type', 'Quantity', 'Hospital', 'Status', 'Created At')
         self.request_tree = ttk.Treeview(list_frame, columns=columns, show='headings')
         
@@ -114,47 +97,38 @@ class BloodBankAdmin:
             self.request_tree.column(col, width=100)
         
         self.request_tree.pack(pady=10, fill='both', expand=True)
-        
-        # Scrollbar
+
         scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.request_tree.yview)
         scrollbar.pack(side='right', fill='y')
         self.request_tree.configure(yscrollcommand=scrollbar.set)
         
-        # Load requests data
         self.refresh_request_list()
+
 
     def refresh_dashboard(self):
         try:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
-            
-            # Get total donors count
             cursor.execute('SELECT COUNT(*) FROM donors')
             donor_count = cursor.fetchone()[0]
-            
-            # Get available blood units (sum of all quantities)
             cursor.execute('SELECT COALESCE(SUM(quantity_ml), 0) FROM donors')
             blood_units = cursor.fetchone()[0]
-            
-            # Get pending requests count
+
             cursor.execute('SELECT COUNT(*) FROM blood_requests WHERE status = "Pending"')
             pending_requests = cursor.fetchone()[0]
             
-            # Get count of unique centers/hospitals
             cursor.execute('SELECT COUNT(DISTINCT hospital_name) FROM users WHERE hospital_name IS NOT NULL')
             center_count = cursor.fetchone()[0]
             
             conn.close()
-            
-            # Update dashboard statistics
+
             stats_data = {
                 "donor_count": donor_count,
                 "blood_units": f"{blood_units}ML",
                 "pending_requests": pending_requests,
                 "center_count": center_count
             }
-            
-            # Find and update the stat labels
+
             for child in self.dashboard_frame.winfo_children():
                 if isinstance(child, ttk.Frame):
                     for stat_frame in child.winfo_children():
@@ -179,8 +153,8 @@ class BloodBankAdmin:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch dashboard data: {str(e)}")
 
+
     def refresh_donor_list(self):
-        # Clear existing items
         for item in self.donor_tree.get_children():
             self.donor_tree.delete(item)
         
@@ -196,8 +170,8 @@ class BloodBankAdmin:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch donor list: {str(e)}")
 
+
     def refresh_hospital_list(self):
-        # Clear existing items
         for item in self.hospital_tree.get_children():
             self.hospital_tree.delete(item)
         
@@ -213,8 +187,8 @@ class BloodBankAdmin:
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch hospital list: {str(e)}")
 
+
     def refresh_request_list(self):
-        # Clear existing items
         for item in self.request_tree.get_children():
             self.request_tree.delete(item)
         

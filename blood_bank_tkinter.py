@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import sqlite3
 from blood_bank_admin import BloodBankAdmin 
-import update_entry
+import admin_update_entry
 
 class BloodBankApp:
     def __init__(self, root, parent, username, role, hospital_name=None):
@@ -492,11 +492,11 @@ class BloodBankApp:
 
 
     def edit_donor(self):
-        update_entry.show_edit_donor_form(self)
+        admin_update_entry.show_edit_donor_form(self)
 
 
     def edit_request(self):
-        update_entry.show_edit_request_form(self)
+        admin_update_entry.show_edit_request_form(self)
 
 
     def delete_donor(self):

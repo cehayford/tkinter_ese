@@ -1,15 +1,14 @@
 import sqlite3
 import hashlib
 
-
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
 
 def init_database():
     conn = sqlite3.connect('bloodbank_users.db')
     cursor = conn.cursor()
-    
-    # Create users table
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
@@ -20,7 +19,6 @@ def init_database():
         )
     ''')
 
-    # Create donors table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS donors (
             donor_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,6 +66,7 @@ def init_database():
     
     conn.commit()
     conn.close()
+
 
 if __name__ == "__main__":
     init_database()

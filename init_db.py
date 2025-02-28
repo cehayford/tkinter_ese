@@ -19,7 +19,7 @@ def init_database():
             hospital_name TEXT
         )
     ''')
-    
+
     # Create donors table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS donors (

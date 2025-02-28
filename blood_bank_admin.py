@@ -17,10 +17,10 @@ class BloodBankAdmin:
         self.hospitals_frame = ttk.Frame(self.notebook)
         self.requests_frame = ttk.Frame(self.notebook)
         
-        self.notebook.add(self.dashboard_frame, text="Dashboard")
+        self.notebook.add(self.dashboard_frame, text="Admin Dashboard")
         self.notebook.add(self.donors_frame, text="Donors")
         self.notebook.add(self.hospitals_frame, text="Hospitals")
-        self.notebook.add(self.requests_frame, text="Blood Requests")
+        self.notebook.add(self.requests_frame, text="Patient Requests")
         
         self.setup_admin_dashboard()
         self.setup_donors_view()
@@ -28,9 +28,9 @@ class BloodBankAdmin:
         self.setup_requests_view()
         approve_frame.setup_request_approval(self)
 
+
     def setup_admin_dashboard(self):
-        # Dashboard Header
-        ttk.Label(self.dashboard_frame, text="Blood Bank Dashboard", 
+        ttk.Label(self.dashboard_frame, text="Adminstrator Dashboard", 
                  font=('Arial', 20, 'bold')).pack(pady=20)
         
         # Create stats frames
@@ -51,7 +51,7 @@ class BloodBankAdmin:
             ttk.Label(stat_frame, text="Loading...", font=('Arial', 16)).pack(pady=20)
         
         # Refresh button
-        ttk.Button(self.dashboard_frame, text="Refresh Dashboard",
+        ttk.Button(self.dashboard_frame, text="Refresh",
                   command=self.refresh_dashboard).pack(pady=20)
 
     def setup_donors_view(self):
@@ -221,15 +221,18 @@ class BloodBankAdmin:
         try:
             conn = sqlite3.connect('bloodbank_users.db')
             cursor = conn.cursor()
-            cursor.execute('SELECT patient_name, blood_group, quantity_ml, hospital, status, created_at FROM blood_requests')
+            cursor.execute('SELECT request_id, patient_name, blood_group, quantity_ml, hospital, status, created_at FROM blood_requests')
             requests_data = cursor.fetchall()
             conn.close()
             
             for req in requests_data:
-                self.request_tree.insert('', 'end', values=req)
+                rowid = req[0]
+                values = req[1:] 
+                self.request_tree.insert('', 'end', text=str(rowid), values=values)
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to fetch request list: {str(e)}")
-
+    
+    
     def on_request_select(self, event):
         approve_frame.on_request_select(self, event)
 

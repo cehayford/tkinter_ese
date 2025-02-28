@@ -6,8 +6,8 @@ def setup_request_approval(self):
     self.approval_frame = ttk.LabelFrame(self.requests_frame, text="Approve Blood Request")
     self.approval_frame.pack(padx=20, pady=10, fill='x')
     
-    # Add selection feature to the request treeview
-    self.request_tree.bind(button_frame, self.on_request_select)
+    # Add selection feature to the request treeview - FIXED EVENT BINDING
+    self.request_tree.bind("<<TreeviewSelect>>", self.on_request_select)
     
     # Request details section
     details_frame = ttk.Frame(self.approval_frame)
@@ -64,6 +64,9 @@ def on_request_select(self, event):
     if not selection:
         return
     
+    # Get the request_id from the 'text' attribute
+    self.selected_request_id = self.request_tree.item(selection[0], 'text')
+    
     # Get values from the selected request
     item = self.request_tree.item(selection[0])
     values = item['values']
@@ -76,10 +79,8 @@ def on_request_select(self, event):
     
     # Find compatible donors
     self.find_compatible_donors(values[1], values[2])
-    
-    # Store request ID for approval
-    self.selected_request_id = self.request_tree.item(selection[0], 'text')
 
+    
 def find_compatible_donors(self, blood_type, quantity_needed):
     # Clear existing items
     for item in self.donor_select_tree.get_children():
@@ -121,11 +122,16 @@ def find_compatible_donors(self, blood_type, quantity_needed):
         
         cursor.execute(query, (quantity_needed, blood_type))
         donors = cursor.fetchall()
-        conn.close()
         
         # Insert compatible donors into treeview
-        for donor in donors:
-            self.donor_select_tree.insert('', 'end', values=donor)
+        for i, donor in enumerate(donors):
+            # Insert with a unique ID that we can reference later
+            self.donor_select_tree.insert('', 'end', iid=f"donor_{i}", values=donor)
+            
+        conn.close()
+        
+        if not donors:
+            messagebox.showinfo("No Matches", "No compatible donors with sufficient quantity found.")
             
     except sqlite3.Error as e:
         messagebox.showerror("Error", f"Failed to find compatible donors: {str(e)}")
@@ -136,7 +142,7 @@ def approve_request(self):
         messagebox.showwarning("Warning", "Please select a blood provider")
         return
     
-    if not hasattr(self, 'selected_request_id'):
+    if not hasattr(self, 'selected_request_id') or not self.selected_request_id:
         messagebox.showwarning("Warning", "Please select a request first")
         return
     
@@ -147,26 +153,41 @@ def approve_request(self):
     donor_name = donor_values[1]
     donor_blood_type = donor_values[2]
     donor_available = int(donor_values[3])  # Available quantity
-
-    selected_item = self.request_tree.selection()
-    request_data = self.request_tree.item(selected_item)['values']
     
     try:
         conn = sqlite3.connect('bloodbank_users.db')
         cursor = conn.cursor()
         
-        # Get the requested quantity
-        cursor.execute("SELECT quantity_ml, patient_name, blood_group, hospital FROM blood_requests WHERE rowid = ?", 
-                      (self.selected_request_id,))
+        # Get the requested quantity and other details
+        cursor.execute("""
+            SELECT quantity_ml, patient_name, blood_group, hospital 
+            FROM blood_requests 
+            WHERE request_id = ?
+        """, (self.selected_request_id,))
+        
         request_data = cursor.fetchone()
+        if not request_data:
+            messagebox.showerror("Error", "Request not found in database")
+            conn.close()
+            return
+            
         requested_quantity = int(request_data[0])
-        print(request_data[0])
         patient_name = request_data[1]
         blood_group = request_data[2]
         requesting_hospital = request_data[3]
         
         # Check if partial fulfillment is needed
         if donor_available < requested_quantity:
+            result = messagebox.askyesno(
+                "Partial Fulfillment", 
+                f"The selected donor only has {donor_available}ml available, but {requested_quantity}ml was requested.\n\n"
+                f"Would you like to partially fulfill this request and create a new request for the remaining amount?"
+            )
+            
+            if not result:
+                conn.close()
+                return
+                
             # Partial fulfillment - Split the request
             remaining_quantity = requested_quantity - donor_available
             fulfilled_quantity = donor_available
@@ -176,11 +197,11 @@ def approve_request(self):
                 """UPDATE blood_requests 
                    SET status = 'Partially Approved', 
                        quantity_ml = ?,
-                       provider_hospital = ?, 
-                       provider_donor = ?,
+                       hospital = ?, 
+                       donor = ?,
                        approved_at = CURRENT_TIMESTAMP,
                        notes = 'Partially fulfilled'
-                   WHERE rowid = ?""", 
+                   WHERE request_id = ?""", 
                 (fulfilled_quantity, donor_hospital, donor_name, self.selected_request_id)
             )
             
@@ -199,10 +220,10 @@ def approve_request(self):
             cursor.execute(
                 """UPDATE blood_requests 
                    SET status = 'Approved', 
-                       provider_hospital = ?, 
-                       provider_donor = ?,
+                       hospital = ?, 
+                       donor = ?,
                        approved_at = CURRENT_TIMESTAMP
-                   WHERE rowid = ?""", 
+                   WHERE request_id = ?""", 
                 (donor_hospital, donor_name, self.selected_request_id)
             )
             fulfilled_quantity = requested_quantity
@@ -235,11 +256,14 @@ def approve_request(self):
         for item in self.donor_select_tree.get_children():
             self.donor_select_tree.delete(item)
             
+        # Clear the selected request ID
+        self.selected_request_id = None
+            
     except sqlite3.Error as e:
         messagebox.showerror("Error", f"Failed to approve request: {str(e)}")
 
 def reject_request(self):
-    if not hasattr(self, 'selected_request_id'):
+    if not hasattr(self, 'selected_request_id') or not self.selected_request_id:
         messagebox.showwarning("Warning", "Please select a request first")
         return
     
@@ -250,7 +274,11 @@ def reject_request(self):
             
             # Update request status
             cursor.execute(
-                "UPDATE blood_requests SET status = 'Rejected', rejected_at = CURRENT_TIMESTAMP WHERE rowid = ?", 
+                """UPDATE blood_requests 
+                   SET status = 'Rejected', 
+                       rejected_at = CURRENT_TIMESTAMP,
+                       notes = 'Rejected by administrator'
+                   WHERE request_id = ?""", 
                 (self.selected_request_id,)
             )
             
@@ -271,6 +299,9 @@ def reject_request(self):
             
             for item in self.donor_select_tree.get_children():
                 self.donor_select_tree.delete(item)
+                
+            # Clear the selected request ID
+            self.selected_request_id = None
                 
         except sqlite3.Error as e:
             messagebox.showerror("Error", f"Failed to reject request: {str(e)}")

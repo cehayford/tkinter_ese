@@ -36,8 +36,6 @@ class BloodBankAdmin:
         self.setup_requests_view()
         approve_frame.setup_request_approval(self)
 
-        ttk.Button(self.parent, text="Logout", command=self.logout).pack(pady=2)
-
     def setup_admin_dashboard(self):
         ttk.Label(self.dashboard_frame, text="Adminstrator Dashboard", 
                  font=('Arial', 20, 'bold')).pack(pady=20)
@@ -68,10 +66,6 @@ class BloodBankAdmin:
             self.donor_tree.column(col, width=100)
         self.donor_tree.pack(pady=10, fill='both', expand=True)
 
-        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.donor_tree.yview)
-        # scrollbar.pack(side='right', fill='both')
-        # self.donor_tree.configure(yscrollcommand=scrollbar.set)
-        
         self.refresh_donor_list()
 
     def setup_hospitals_view(self):
@@ -85,10 +79,6 @@ class BloodBankAdmin:
             self.hospital_tree.column(col, width=100)
         
         self.hospital_tree.pack(pady=10, fill='both', expand=True)
-        
-        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.hospital_tree.yview)
-        # scrollbar.pack(side='right', fill='y')
-        # self.hospital_tree.configure(yscrollcommand=scrollbar.set)
         self.refresh_hospital_list()
 
     def setup_requests_view(self):
@@ -103,11 +93,6 @@ class BloodBankAdmin:
             self.request_tree.column(col, width=100)
         
         self.request_tree.pack(pady=10, fill='both', expand=True)
-
-        # scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=self.request_tree.yview)
-        # scrollbar.pack(side='right', fill='y')
-        # self.request_tree.configure(yscrollcommand=scrollbar.set)
-        
         self.refresh_request_list()
 
     def refresh_dashboard(self):

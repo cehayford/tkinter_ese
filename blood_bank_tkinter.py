@@ -15,19 +15,28 @@ class BloodBankApp:
         self.role = role
         self.hospital_name = hospital_name
         self.logout_callback = logout_callback
-        
         self.logout_frame = ttk.Frame(self.parent)
         self.logout_frame.pack(fill='x')
-        ttk.Button(self.logout_frame, text="Logout", command=self.logout).pack(pady=2)
-        
+
+        conn = sqlite3.connect('bloodbank_users.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT hospital_name
+            FROM users where username = ?
+        ''', (username,))
+        result = cursor.fetchone()
+        conn.close()
+        if result:
+            hospital_name = result[0]
+
         self.notebook = ttk.Notebook(self.parent)
         self.notebook.pack(pady=0, expand=True, fill='both')
-        
         if self.role == "admin":
             self.admin = BloodBankAdmin(self.parent)
         elif self.role == "hospital":
             self.setup_hospital_view()
-
+        ttk.Button(self.logout_frame, text="Logout", command=self.logout).pack(pady=0, padx=10, anchor='ne')
+        
 
     def logout(self):
         if self.logout_callback:
@@ -119,34 +128,6 @@ class BloodBankApp:
         ttk.Button(list_frame, text="Edit Donor", command=self.edit_donor).pack(side='left', padx=5, pady=5)
         ttk.Button(list_frame, text="Delete Donor", command=self.delete_donor).pack(side='left', padx=5, pady=5)
 
-    def setup_transfusion_center(self):
-        form_frame = ttk.LabelFrame(self.transfusion_frame, text="Transfusion Center Details")
-        form_frame.pack(padx=20, pady=10, fill='x')
-        
-        fields = [
-            ("Center Name:", "center_name", ttk.Entry),
-            ("Location:", "location", ttk.Entry),
-            ("Phone:", "phone", ttk.Entry),
-            ("Email:", "email", ttk.Entry),
-        ]
-        
-        self.center_entries = {}
-        for i, (label, field_name, widget) in enumerate(fields):
-            ttk.Label(form_frame, text=label).grid(row=i, column=0, padx=5, pady=5)
-            self.center_entries[field_name] = widget(form_frame)
-            self.center_entries[field_name].grid(row=i, column=1, padx=5, pady=5)
-        
-        inventory_frame = ttk.LabelFrame(self.transfusion_frame, text="Blood Inventory")
-        inventory_frame.pack(padx=20, pady=10, fill='both', expand=True)
-        
-        columns = ('Blood Type', 'Quantity', 'Expiry Date', 'Status')
-        self.inventory_tree = ttk.Treeview(inventory_frame, columns=columns, show='headings')
-        
-        for col in columns:
-            self.inventory_tree.heading(col, text=col)
-            self.inventory_tree.column(col, width=100)
-        
-        self.inventory_tree.pack(pady=10, fill='both', expand=True)
 
     def setup_blood_requests(self):
         form_frame = ttk.LabelFrame(self.requests_frame, text="New Blood Request")

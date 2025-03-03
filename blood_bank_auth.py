@@ -83,16 +83,19 @@ class BloodBankAuth:
         password_entry.pack(pady=5)
 
         extra_field_entry = None
+        
         if role == "hospital":
             ttk.Label(self.main_frame, text="Hospital Name:").pack()
             extra_field_entry = ttk.Entry(self.main_frame)
             extra_field_entry.pack(pady=5)
-        
-        ttk.Button(self.main_frame, text="Register", command=lambda: self.register(username_entry.get(), email_entry.get(), password_entry.get(), role,
-                extra_field_entry.get() if extra_field_entry else None
-            )).pack(pady=10)
-        ttk.Button(self.main_frame, text="Back to Login", 
-                  command=self.show_login).pack(pady=5)
+        if role == "donor":
+            ttk.Label(self.main_frame, text="Donor ID:").pack()
+            extra_field_entry = ttk.Entry(self.main_frame)
+            extra_field_entry.pack(pady=5)
+            print(extra_field_entry)
+
+        ttk.Button(self.main_frame, text="Register", command=lambda: self.register(username_entry.get(), email_entry.get(), password_entry.get(), role, extra_field_entry.get())).pack(pady=10)
+        ttk.Button(self.main_frame, text="Back to Login", command=self.show_login).pack(pady=5)
 
 
     def login(self, username, password):
@@ -143,7 +146,7 @@ class BloodBankAuth:
                 self.hash_password(password),
                 role,
                 extra_field if role == "hospital" else None,
-                None 
+                extra_field if role == "donor" else None
             ))
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
@@ -157,17 +160,12 @@ class BloodBankAuth:
     def show_admin_dashboard(self):
         self.clear_frame()
         app = BloodBankApp(self.root, self.main_frame, self.current_user, "admin")
-        
-        ttk.Button(self.main_frame, text="Logout", 
-                  command=self.logout).pack(pady=10)
 
 
     def show_hospital_dashboard(self, hospital_name):
         self.clear_frame()
+        # ttk.Label(self.main_frame, text=f"{hospital_name}", font=('Helvetica', 18)).pack(pady=2, anchor='nw')
         app = BloodBankApp(self.root, self.main_frame, self.current_user, "hospital", hospital_name)
-        
-        ttk.Button(self.main_frame, text="Logout", 
-                  command=self.logout).pack(pady=10)
 
 
     def show_donor_dashboard(self, donor_id):
@@ -186,7 +184,7 @@ class BloodBankAuth:
         
         self.history_tree.pack(pady=10, fill='both', expand=True)
         self.load_donor_history(donor_id)
-        ttk.Button(self.main_frame, text="Logout", command=self.logout).pack(pady=10)
+        ttk.Button(self.main_frame, text="Logout", command=self.logout).pack(pady=0, padx=10, anchor='ne')
 
 
     def load_donor_history(self, donor_id):
